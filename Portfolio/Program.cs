@@ -45,15 +45,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<MongoDbSettings>(options =>
 {
     options.ConnectionString = builder.Configuration["MONGO_URI"];
-    options.DatabaseName = "PortfolioDb";
-    options.ContactCollectionName = "Contacts";
+    options.DatabaseName = "PortfolioDb";           // You can change DB name if needed
+    options.ContactCollectionName = "Contacts";     // Collection name
 });
 
+// Register repository
 builder.Services.AddSingleton<ContactRepository>();
 
+// Add controllers
 builder.Services.AddControllers();
 
-// CORS for all origins
+// Enable CORS for all origins
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -62,15 +64,31 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader());
 });
 
+// Swagger for API testing
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Disable HTTPS redirection on Render
-// app.UseHttpsRedirection();
+// Enable Swagger in development (optional)
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
+// Render sets dynamic port in environment variable PORT
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+app.Urls.Add($"http://*:{port}");
+
+// Use CORS
+app.UseCors("AllowAll");
+
+// Authorization (if used)
 app.UseAuthorization();
+
+// Map controllers
 app.MapControllers();
 
+// Run the app
 app.Run();
