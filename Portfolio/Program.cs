@@ -41,24 +41,19 @@ using Portfolio;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Get MongoDB URI from environment variable
-var mongoConnection = Environment.GetEnvironmentVariable("MONGO_URI")
-                      ?? builder.Configuration.GetSection("MongoDbSettings:ConnectionString").Value;
-
+// Bind MongoDbSettings from environment variable
 builder.Services.Configure<MongoDbSettings>(options =>
 {
-    options.ConnectionString = mongoConnection;
-    options.DatabaseName = builder.Configuration.GetSection("MongoDbSettings:DatabaseName").Value;
-    options.ContactCollectionName = builder.Configuration.GetSection("MongoDbSettings:ContactCollectionName").Value;
+    options.ConnectionString = builder.Configuration["MONGO_URI"];
+    options.DatabaseName = "PortfolioDb";
+    options.ContactCollectionName = "Contacts";
 });
 
-// Register repository
 builder.Services.AddSingleton<ContactRepository>();
 
-// Add services to the container
 builder.Services.AddControllers();
 
-// Add CORS
+// CORS for all origins
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -72,22 +67,10 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Disable HTTPS redirection on Render
+// app.UseHttpsRedirection();
 
-app.UseHttpsRedirection();
 app.UseAuthorization();
-
-app.UseCors("AllowAll");
-
 app.MapControllers();
-
-// Dynamic port binding for Render
-var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
-app.Urls.Add($"http://*:{port}");
 
 app.Run();
