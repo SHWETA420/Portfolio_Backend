@@ -7,11 +7,11 @@ EXPOSE 8080
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy csproj and restore dependencies
+# Copy csproj and restore
 COPY Portfolio/Portfolio.csproj ./Portfolio/
 RUN dotnet restore "Portfolio/Portfolio.csproj"
 
-# Copy all source code and publish
+# Copy everything and publish
 COPY . .
 WORKDIR /src/Portfolio
 RUN dotnet publish "Portfolio.csproj" -c Release -o /app/publish
